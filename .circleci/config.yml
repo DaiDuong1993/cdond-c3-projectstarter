@@ -233,6 +233,7 @@ jobs:
             cd frontend
             npm install
             npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment
       - revert-migrations
@@ -273,7 +274,9 @@ jobs:
             npm run build
             npm run prestart:prod
             cd ..
-            tar -C backend -czvf ~/artifact.tar.gz .
+            # Zip the directory
+            tar -czvf artifact.tar.gz backend/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/
       - run:
           name: Deploy backend
           command: |
@@ -281,6 +284,11 @@ jobs:
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
+      - run:
+          name: add ansible config
+          command: |
+            echo "[ssh_connection]" > ansible.cfg
+            echo "scp_if_ssh=True" >> ansible.cfg
       - destroy-environment
       - revert-migrations
 
