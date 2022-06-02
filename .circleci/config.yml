@@ -131,7 +131,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --stack-name back-prod-${CIRCLE_WORKFLOW_ID:0:7} \
+              --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7} \
               --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7} \
               --tags project=udacity-project
       - run:
@@ -139,7 +139,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --stack-name front-prod-${CIRCLE_WORKFLOW_ID:0:7} \
+              --stack-name frontend-${CIRCLE_WORKFLOW_ID:0:7} \
               --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7} \
               --tags project=udacity-project
       - run:
@@ -224,25 +224,13 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
-            echo API_URL=$API_URL >> "frontend/.env"
-            echo ENVIRONMENT=production  >> "frontend/.env"
-            echo NODE_ENV=production >> "frontend/.env"
+            echo "API_URL=http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
-      - run:
-          name: Build frontend objects
-          command: |
-            cd frontend
-            npm i
-            npm run build
-      - run:
           name: Deploy frontend objects
           command: |
             cd frontend
             npm install
             npm run build
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment
       - revert-migrations
@@ -268,25 +256,11 @@ jobs:
       - run:
           name: build backend dist
           command: |
-            cd /root/project/backend
-            npm i
-
-            echo ENVIROMENT=production > ".env"
-            echo TYPEORM_CONNECTION=postgres >> ".env"
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> ".env"
-            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> ".env"
-            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> ".env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> ".env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> ".env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
-
+            cd backend
+            npm install
             npm run build
-            npm run start:prod
             cd ..
-            tar -czvf artifact.tar.gz backend/
-            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/
+            tar -C backend -czvf ~/artifact.tar.gz .
       - run:
           name: Deploy backend
           command: |
@@ -317,7 +291,7 @@ jobs:
             echo "------------------------------------"
             echo BACKEND_URL: http://${BACKEND_IP}:3030/api/status
             echo "------------------------------------"
-            if curl -s http://${BACKEND_IP}:3030/api/status | grep "ok"
+            if curl http://${BACKEND_IP}:3030/api/status | grep "ok"
             then
               echo "Backend Smoke Test Success"
               exit 0
@@ -380,8 +354,8 @@ jobs:
   #           if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
   #           then
   #             aws s3 rb s3://udapeople-${OldWorkflowID} --force
-  #             aws cloudformation delete-stack --stack-name front-prod-${OldWorkflowID}
-  #             aws cloudformation delete-stack --stack-name back-prod-${OldWorkflowID}
+  #             aws cloudformation delete-stack --stack-name backend -${OldWorkflowID}
+  #             aws cloudformation delete-stack --stack-name frontend -${OldWorkflowID}
   #           fi
   #     - destroy-environment
   #     - revert-migrations
