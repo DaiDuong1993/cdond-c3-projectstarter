@@ -330,8 +330,6 @@ jobs:
           name: Install dependencies
           command: |
             yum -y install tar gzip
-      - attach_workspace:
-          at: .
       - run:
           name: Retrieve stack workflow id
           command: |
@@ -350,10 +348,6 @@ jobs:
             --stack-name InitialStack \
             --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
-      - persist_to_workspace:
-          root: .
-          paths:
-            - OldFlow.txt
       # Here's where you will add some code to rollback on failure
       - destroy-environment
       - revert-migrations
