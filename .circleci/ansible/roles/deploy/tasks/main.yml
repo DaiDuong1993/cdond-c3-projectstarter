@@ -1,5 +1,4 @@
 ---
----
 - name: "Copying backend zip file"
   copy:
     src: "~/artifact.tar.gz"
