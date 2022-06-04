@@ -94,6 +94,7 @@ jobs:
       - restore_cache:
           keys: [frontend-build]
       - run:
+          name: Front end analyze
           command: |
             cd frontend
             npm i
@@ -109,6 +110,7 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - run:
+          name: Back end analyze
           command: |
             cd backend
             npm i
