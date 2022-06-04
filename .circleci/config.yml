@@ -346,7 +346,7 @@ jobs:
             aws cloudformation deploy \
             --template-file .circleci/files/cloudfront.yml \
             --stack-name InitialStack \
-            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
       - persist_to_workspace:
           root: ~/
@@ -363,6 +363,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/ 
+      - run:
+          name: Install dependencies
+          command: |
+            yum -y install tar gzip
       - run:
           name: Get old stack workflow id and Remove old stacks and files
           command: |
