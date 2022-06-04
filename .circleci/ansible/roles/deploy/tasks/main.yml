@@ -1,11 +1,15 @@
 ---
+- name: create directory for backend
+  become: yes
+  file:
+      path: ~/backend
+      state: directory
+      mode: 0755
+
 - name: "Copying backend zip file"
   copy:
     src: "~/artifact.tar.gz"
     dest: "~/artifact.tar.gz"
-
-- name: "Make folder"
-  shell: mkdir ~/backend
 
 - name: "Unzip backend files to correct directory"
   ansible.builtin.unarchive:
